@@ -1,0 +1,44 @@
+# Import necessary libraries
+import openrouteservice as ors
+import folium
+
+# Create a client for OpenRouteService
+client = ors.Client(key='5b3ce3597851110001cf6248571486db3ef0458ea19d9d4783b68797', requests_kwargs={'verify': False})
+
+# Define a function to geocode addresses
+def geocode_address(address):
+    geocode_result = client.pelias_search(address)
+    # Extract the coordinates from the geocoding result
+    coords = geocode_result['features'][0]['geometry']['coordinates']
+    return coords
+
+# Example addresses (replace with any addresses you'd like)
+start_address = "Strada Resita 37A Bucuresti, Romania"
+end_address = "Strada Otelarilor 41 Galati, Romania"
+
+# Get coordinates for the addresses
+start_coords = geocode_address(start_address)
+end_coords = geocode_address(end_address)
+
+# Request the route with 'driving-car' profile for car travel
+route = client.directions(coordinates=[start_coords, end_coords],
+                          profile='driving-car',  # Set to driving
+                          format='geojson')
+
+# Extract the total distance from the route response in meters
+total_distance_meters = route['features'][0]['properties']['segments'][0]['distance']
+
+# Convert distance to kilometers
+total_distance_km = total_distance_meters / 1000  # Converting meters to kilometers
+
+# Print the road distance in kilometers
+print(f"Total road distance: {total_distance_km:.2f} km")
+
+# Create the map centered on the starting point
+m = folium.Map(location=[start_coords[1], start_coords[0]], zoom_start=14)  # Center map on the starting address
+
+# Add the main route polyline to the map (blue for the car route)
+folium.PolyLine(locations=[list(reversed(coord)) for coord in route['features'][0]['geometry']['coordinates']], color="blue").add_to(m)
+
+# Display the map
+m

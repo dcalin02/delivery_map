@@ -2,12 +2,27 @@ import streamlit as st
 import openrouteservice as ors
 import folium
 import pandas as pd
-import re
 import math
 import time  
 
 st.set_page_config(layout="wide")
 
+# Custom CSS to increase the sidebar width
+st.markdown("""
+    <style>
+        /* Set the sidebar to a max width */
+        .css-1d391kg {
+            width: 400px !important; /* You can adjust this value to increase or decrease sidebar width */
+        }
+
+        /* Adjust the main content margin to ensure no overlapping with the sidebar */
+        .css-ffhzg2 {
+            margin-left: 400px !important; /* Same width as sidebar */
+        }
+    </style>
+""", unsafe_allow_html=True)
+
+# The rest of your code
 @st.cache_data(ttl=3600)  
 def load_google_sheet_data(sheet_url):
     return pd.read_csv(sheet_url)
@@ -38,9 +53,17 @@ mag['Adresa'] = mag['Adresa'].str.replace("Str\.\s*", "Strada ", regex=True)
 
 st.title("Calculator tip de livrare")
 st.markdown("<hr>", unsafe_allow_html=True)
-
+st.markdown(
+        """
+       <style>
+       [data-testid="stSidebar"][aria-expanded="true"]{
+           min-width: 500px;
+           max-width: 500px;
+       }
+       """,
+        unsafe_allow_html=True,
+    )  
 client = ors.Client(key='5b3ce3597851110001cf6248571486db3ef0458ea19d9d4783b68797', requests_kwargs={'verify': False})
-
 
 @st.cache_data(ttl=3600)
 def geocode_address(address):
@@ -48,13 +71,11 @@ def geocode_address(address):
     coords = geocode_result['features'][0]['geometry']['coordinates']
     return coords
 
-
 if 'product_entries' not in st.session_state:
     st.session_state['product_entries'] = [{'ean': '', 'quantity': 1}]  # Start with one product added by default
 
-
 with st.sidebar:
-
+    
     with st.container(border=True):
         store_names = mag['Store_Name'].unique()
         selected_store = st.selectbox("Selectați un magazin:", store_names, key="store_selection")

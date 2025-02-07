@@ -6,7 +6,8 @@ import re
 import math
 import time  
 
-st.set_page_config(layout="wide")
+
+st.set_page_config(page_title="Calculator livrare", page_icon=None,layout="centered")
 
 @st.cache_data(ttl=3600)  
 def load_google_sheet_data(sheet_url):
@@ -21,10 +22,12 @@ mag = load_google_sheet_data(sheet_url_2)
 
 order_type_mapping = {
     "STANDARD": [
-        {"range": "STANDARD 0-15KM","pret":48, "min_km": 0, "max_km": 15, "cod":"11758670", "cod_desc":"12162290",'pret_desc':210,"cod_km":None,"pret_km":None},
+        {"range": "STANDARD 0-15KM","pret":48, "min_km": 0, "max_km": 15, "cod":"11758670", 
+"cod_desc":"12162290",'pret_desc':210,"cod_km":None,"pret_km":None},
         {"range": "STANDARD 15-20KM","pret":108, "min_km": 15, "max_km": 20, "cod":"11758684", "cod_desc":"12162290",'pret_desc':210,"cod_km":None,"pret_km":None},
         {"range": "STANDARD 20-30KM","pret":108, "min_km": 20, "max_km": 30, "cod":"11758691", "cod_desc":"12162290",'pret_desc':210,"cod_km":None,"pret_km":None},
-        {"range": "STANDARD 30-50KM","pret":168, "min_km": 30, "max_km": 50, "cod":"11758705", "cod_desc":None,'pret_desc':None,"cod_km":None,"pret_km":None},
+        {"range": "STANDARD 30-50KM","pret":168, "min_km": 30, "max_km": 50, "cod":"11758705", 
+"cod_desc":None,'pret_desc':None,"cod_km":None,"pret_km":None},
         {"range": "STANDARD >50KM","pret":168, "min_km": 50, "max_km": None, "cod":"11758705", "cod_desc":None,'pret_desc':None,"cod_km":"11859316","pret_km":2.5},
     ]
 }
@@ -33,7 +36,8 @@ order_type_mapping = {
 mag[['Latitude', 'Longitude']] = mag['lat_long'].str.split(",", expand=True)
 mag = mag[['store_name', 'adress', 'Latitude', 'Longitude']]
 
-st.title("Calculator tip de livrare")
+st.title("📦 Calculator livrare")
+
 st.markdown("<hr>", unsafe_allow_html=True)
 
 client = ors.Client(key='5b3ce3597851110001cf6248571486db3ef0458ea19d9d4783b68797', requests_kwargs={'verify': False})
@@ -45,12 +49,12 @@ def geocode_address(address):
     return coords
 
 if 'product_entries' not in st.session_state:
-    st.session_state['product_entries'] = [{'ID_PRODUS': '', 'quantity': 1}]  # Start with one product added by default
+    st.session_state['product_entries'] = [{'ID_PRODUS': '', 'quantity': 1}] 
 
 with st.sidebar:
     with st.container(border=True):
         store_names = mag['store_name'].unique()
-        selected_store = st.selectbox("Selectați un magazin:", store_names, key="store_selection")
+        selected_store = st.selectbox("Selecteaza un magazin:", store_names, key="store_selection")
         
     store_info = mag[mag['store_name'] == selected_store].iloc[0]
 
@@ -60,7 +64,7 @@ with st.sidebar:
         start_address = store_info['adress']  # Display the address for reference
         
     with st.container(border=True):
-        st.subheader("Adresa de destinație")
+        st.subheader("📬 Adresa de destinație")
     
         end_col1, end_col2, end_col3, end_col4 = st.columns([2, 2, 2, 2])
 
@@ -78,7 +82,7 @@ with st.sidebar:
 
     # Add and remove products in the sidebar
     with st.container(border=True):
-        st.subheader("Produse")
+        st.subheader("🛍️ Produse")
         if st.button("Adaugă produs"):
             st.session_state['product_entries'].append({'ID_PRODUS': '', 'quantity': 1})  # Adds a new product entry
   
@@ -126,9 +130,11 @@ def update_quantity(index):
 with st.container():
     total_weight = 0
     total_distance_km = 0  # Initialize distance
-    nr_livrari=1
+    nr_livrari=0
+    if total_distance_km==0 and nr_livrari==0:
+        st.warning("⚠️ Introduceti produsele si adresa de destinatie pentru a vizualiza detaliile. ⚠️")
 
-    if start_lat and start_lon and end_street and end_city and end_country:
+    if start_lat and start_lon and end_street and end_city and end_country and nr_livrari>0:
         full_end_address = f"{end_street}, {end_city}, {end_country}"
         if end_postal_code:
             full_end_address += f", {end_postal_code}"
@@ -159,10 +165,13 @@ with st.container():
             nr_livrari=math.ceil(total_weight/1500)
 
             # Display total distance and weight
-            st.write(f"**Distanța totală:** {math.ceil(total_distance_km)} km")
-            st.write(f"**Kilometri suplimentari:** {math.ceil(extra_km)} km")
-            st.write(f"**Greutate totală:** {total_weight:.2f} kg")
-            st.write(f"**Numar de livrari:** {nr_livrari} livrari")
+            if nr_livrari>0:
+                st.write(f"**Distanța totală:** {math.ceil(total_distance_km)} km")
+                st.write(f"**Kilometri suplimentari:** {math.ceil(extra_km)} km")
+                st.write(f"**Greutate totală:** {total_weight:.2f} kg")
+                st.write(f"**Numar de livrari:** {nr_livrari} livrari")
+            else:
+                st.warning("⚠️ Adauga produse pentru a vizualiza detaliile despre comanda. ⚠️")
             
             st.markdown("<hr>", unsafe_allow_html=True)
 
@@ -178,10 +187,10 @@ with st.container():
             pret_km=None
             pret_total_desc= None
             pret_total_km= None
-            
+
             is_deployment = st.checkbox('Adauga serviciu de descarcare')
             if total_distance_km>30 and is_deployment:
-                st.warning("Serviciul de descarcare nu poate fi adăugat pentru distanțe mai mari de 50 km.")
+                st.warning("⚠️ Serviciul de descarcare nu poate fi adăugat pentru distanțe mai mari de 30 km. ⚠️")
 
             for order in order_type_mapping["STANDARD"]:
                 if order["min_km"] <= total_distance_km < (order["max_km"] if order["max_km"] is not None else float('inf')):
@@ -216,33 +225,35 @@ with st.container():
                     "Cost serviciu [RON]":[order['pret'],pret_desc,pret_km],
                     "Cost total serviciu [RON":[order['pret']*nr_livrari,pret_total_desc,pret_total_km],}
             
-                
+
             df=pd.DataFrame(data)
             df = df.dropna(how='all')
-            st.dataframe(df,hide_index=True)
+            if nr_livrari>0:
+                st.dataframe(df,hide_index=True)
             
-            if pret_total_desc is None: 
-                pret_total_desc=0
-            else: pret_total_desc=pret_total_desc
+                if pret_total_desc is None: 
+                    pret_total_desc=0
+                else: pret_total_desc=pret_total_desc
 
-            if pret_total_km is None: 
-                pret_total_km=0
-            else: pret_total_km=pret_total_km
+                if pret_total_km is None: 
+                    pret_total_km=0
+                else: pret_total_km=pret_total_km
             
             
-            st.write(f"**Cost total livrare:** {pret_total_desc+pret_total_km+order['pret']*nr_livrari} RON")
+                st.write(f"**Cost total livrare:** {pret_total_desc+pret_total_km+order['pret']*nr_livrari} RON")
                 
         except Exception as e:
             st.error(f"Error calculating the route: {e}")
-    else:
-        st.write("**Completează adresa de destinație pentru calcularea distanței.**")
 
     st.markdown("<hr>", unsafe_allow_html=True)
 
     # Show checkboxes for hiding/showing the map
     show_map = st.checkbox("Arată harta", value=False)
 
-    if show_map and start_lat and start_lon and end_street and end_city and end_country and total_distance_km > 0:
+    if show_map and total_distance_km==0:
+        st.warning("⚠️ Introduceti adresa de destinatie pentru a vizualiza harta. ⚠️")
+
+    if show_map and start_lat and start_lon and end_street and end_city and end_country:
         def calculate_zoom_level(total_distance_km):
             if total_distance_km < 10:
                 return 15  # Zoom in close for small distances
@@ -282,7 +293,7 @@ with st.container():
                 
                 # Display the map
                 map_html = m._repr_html_()
-                st.components.v1.html(map_html, height=375, width=790)  # Larger map
+                st.components.v1.html(map_html, height=375, width=670)  # Larger map
 
             except Exception as e:
                 st.error(f"Error displaying the map: {e}")

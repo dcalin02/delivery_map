@@ -36,7 +36,7 @@ order_type_mapping = {
 mag[['Latitude', 'Longitude']] = mag['lat_long'].str.split(",", expand=True)
 mag = mag[['store_name', 'adress', 'Latitude', 'Longitude']]
 
-st.title("📦 Calculator livrare")
+st.subheader("📦 Calculator livrare")
 
 st.markdown("<hr>", unsafe_allow_html=True)
 

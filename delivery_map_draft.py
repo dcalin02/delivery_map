@@ -130,10 +130,8 @@ def update_quantity(index):
 with st.container():
     total_weight = 0
     total_distance_km = 0  # Initialize distance
-    nr_livrari=0
-    if total_distance_km==0 and nr_livrari==0:
-        st.warning("⚠️ Introduceti produsele si adresa de destinatie pentru a vizualiza detaliile. ⚠️")
-
+    nr_livrari=1
+            
     if start_lat and start_lon and end_street and end_city and end_country and nr_livrari>0:
         full_end_address = f"{end_street}, {end_city}, {end_country}"
         if end_postal_code:
@@ -244,7 +242,7 @@ with st.container():
                 
         except Exception as e:
             st.error(f"Error calculating the route: {e}")
-
+        
     st.markdown("<hr>", unsafe_allow_html=True)
 
     # Show checkboxes for hiding/showing the map
